@@ -2,3 +2,13 @@ CREATE DATABASE IF NOT EXISTS cms_bro
     CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 USE cms_bro;
+
+CREATE TABLE IF NOT EXISTS users (
+    username   VARCHAR(20) PRIMARY KEY,
+    first_name      VARCHAR(255) NOT NULL,
+    last_name       VARCHAR(255) NOT NULL UNIQUE,
+    age SMALLINT UNSIGNED NOT NULL CHECK (age <= 150),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+DROP TABLE pages;
