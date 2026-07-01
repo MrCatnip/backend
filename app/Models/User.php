@@ -222,6 +222,15 @@ class User
     }
 
     /**
+     * Delete a user by username (the PK). Value is bound, so injection-safe.
+     */
+    public static function delete(string $username): void
+    {
+        $stmt = Database::connect()->prepare('DELETE FROM users WHERE username = ?');
+        $stmt->execute([$username]);
+    }
+
+    /**
      * Build a User object from a DB row.
      *
      * @param array<string, mixed> $row

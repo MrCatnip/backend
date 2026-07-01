@@ -123,6 +123,21 @@ class UsersController extends Controller
     }
 
     /**
+     * POST /delete — remove a user, then return to the list.
+     */
+    public function delete(): void
+    {
+        $username = trim($_POST['username'] ?? '');
+
+        if ($username !== '') {
+            // Idempotent: deleting a non-existent user is a harmless no-op.
+            User::delete($username);
+        }
+
+        $this->redirect('/users');
+    }
+
+    /**
      * Collect the known user fields from the POST request (HTTP concern).
      *
      * @return array<string, string>
