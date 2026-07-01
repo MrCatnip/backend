@@ -16,10 +16,10 @@
         <tbody>
             <?php foreach ($users as $user): ?>
                 <tr>
-                    <td><?= htmlspecialchars($user['username']) ?></td>
-                    <td><?= htmlspecialchars($user['first_name']) ?></td>
-                    <td><?= htmlspecialchars($user['last_name']) ?></td>
-                    <td><?= htmlspecialchars((string) $user['age']) ?></td>
+                    <td><?= htmlspecialchars($user->username) ?></td>
+                    <td><?= htmlspecialchars($user->first_name) ?></td>
+                    <td><?= htmlspecialchars($user->last_name) ?></td>
+                    <td><?= htmlspecialchars((string) $user->age) ?></td>
                 </tr>
             <?php endforeach ?>
         </tbody>
