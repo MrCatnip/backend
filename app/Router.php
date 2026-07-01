@@ -2,6 +2,8 @@
 
 namespace App;
 
+use App\Exceptions\NotFoundException;
+
 class Router
 {
     /**
@@ -50,9 +52,7 @@ class Router
         $handler = $this->routes[$method][$path] ?? null;
 
         if ($handler === null) {
-            http_response_code(404);
-            echo "404 Not Found: $path";
-            return;
+            throw new NotFoundException("No route for {$path}");
         }
 
         [$class, $action] = $handler;

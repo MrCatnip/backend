@@ -2,6 +2,7 @@
 
 namespace App;
 
+use App\Exceptions\NotFoundException;
 use ErrorException;
 use Throwable;
 
@@ -38,17 +39,26 @@ class ErrorHandler
     }
 
     /**
-     * Render an uncaught throwable as a 500 response (HTML or JSON).
+     * Render an uncaught throwable: 404 for NotFoundException, else 500.
+     * Negotiates HTML vs JSON based on the request.
      */
     public function handleException(Throwable $e): void
     {
-        error_log((string) $e);
+        $isNotFound = $e instanceof NotFoundException;
+        $status     = $isNotFound ? 404 : 500;
 
-        if (headers_sent() === false) {
-            http_response_code(500);
+        // 404s are an expected outcome, not a server fault — no need to log.
+        if ($isNotFound === false) {
+            error_log((string) $e);
         }
 
-        $this->wantsJson() ? $this->renderJson($e) : $this->renderHtml($e);
+        if (headers_sent() === false) {
+            http_response_code($status);
+        }
+
+        $this->wantsJson()
+            ? $this->renderJson($status, $e)
+            : $this->renderHtml($status, $e);
     }
 
     /**
@@ -71,7 +81,7 @@ class ErrorHandler
             || str_contains($_SERVER['CONTENT_TYPE'] ?? '', 'application/json');
     }
 
-    private function renderJson(Throwable $e): void
+    private function renderJson(int $status, Throwable $e): void
     {
         if (headers_sent() === false) {
             header('Content-Type: application/json');
@@ -79,23 +89,45 @@ class ErrorHandler
 
         echo json_encode([
             'success' => false,
-            'message' => $this->debug ? $e->getMessage() : 'Something went wrong.',
+            'message' => $this->messageFor($status, $e),
         ]);
     }
 
-    private function renderHtml(Throwable $e): void
+    private function renderHtml(int $status, Throwable $e): void
     {
         if (headers_sent() === false) {
             header('Content-Type: text/html; charset=utf-8');
         }
 
-        if ($this->debug) {
-            echo '<h1>500 &mdash; ' . htmlspecialchars($e->getMessage()) . '</h1>';
+        $title = $status === 404 ? '404 — Not Found' : '500 — Error';
+
+        ob_start();
+        echo '<h1>' . htmlspecialchars($title) . '</h1>';
+        echo '<p>' . htmlspecialchars($this->messageFor($status, $e)) . '</p>';
+        if ($status === 500 && $this->debug) {
             echo '<pre>' . htmlspecialchars((string) $e) . '</pre>';
-            return;
+        }
+        $content = ob_get_clean();
+
+        // Render inside the shared layout for a consistent look. Fall back to
+        // the bare content if the layout itself can't be rendered.
+        try {
+            require __DIR__ . '/Views/layout.php';
+        } catch (Throwable) {
+            echo $content;
+        }
+    }
+
+    /**
+     * User-facing message for a given status. 404 messages are our own and
+     * safe to show; 500 details are hidden unless debug is on.
+     */
+    private function messageFor(int $status, Throwable $e): string
+    {
+        if ($status === 404) {
+            return $e->getMessage() !== '' ? $e->getMessage() : 'Not found.';
         }
 
-        echo '<h1>500 &mdash; Something went wrong</h1>';
-        echo '<p>Please try again later.</p>';
+        return $this->debug ? $e->getMessage() : 'Something went wrong.';
     }
 }

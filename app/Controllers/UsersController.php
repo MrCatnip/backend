@@ -3,6 +3,7 @@
 namespace App\Controllers;
 
 use App\Controller;
+use App\Exceptions\NotFoundException;
 use App\Models\User;
 
 class UsersController extends Controller
@@ -75,9 +76,7 @@ class UsersController extends Controller
         $user = User::findByUsername($_GET['username'] ?? '');
 
         if ($user === null) {
-            http_response_code(404);
-            echo 'User not found.';
-            return;
+            throw new NotFoundException('User not found.');
         }
 
         $this->view('user_form', [
