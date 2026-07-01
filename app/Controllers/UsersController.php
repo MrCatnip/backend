@@ -33,7 +33,7 @@ class UsersController extends Controller
 
         $users = User::select($name, $ageMin, $ageMax);
 
-        $this->view('users', ['users' => $users]);
+        $this->view('users', ['title' => 'Users', 'users' => $users]);
     }
 
     /**
@@ -43,6 +43,7 @@ class UsersController extends Controller
     {
         $this->view('user_form', [
             ...self::REGISTER_FORM,
+            'title'  => self::REGISTER_FORM['heading'],
             'fields' => User::fields(),
             'old'    => [],
         ]);
@@ -81,6 +82,7 @@ class UsersController extends Controller
 
         $this->view('user_form', [
             ...self::EDIT_FORM,
+            'title'  => self::EDIT_FORM['heading'],
             'fields' => $this->editFields(),
             'old'    => $this->toInput($user),
         ]);

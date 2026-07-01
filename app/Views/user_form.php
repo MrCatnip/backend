@@ -9,7 +9,6 @@
  */
 ?>
 <h1><?= htmlspecialchars($heading) ?></h1>
-<p><a href="/">← Back to home</a></p>
 
 <form id="user-form" action="<?= htmlspecialchars($action) ?>" data-method="<?= htmlspecialchars($method) ?>">
     <?php foreach ($fields as $name => $meta): ?>

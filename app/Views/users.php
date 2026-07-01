@@ -1,5 +1,4 @@
 <h1>Users</h1>
-<p><a href="/">← Back to home</a></p>
 
 <?php if (empty($users)): ?>
     <p>No users found.</p>

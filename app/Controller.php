@@ -5,14 +5,21 @@ namespace App;
 class Controller
 {
     /**
-     * Render a view file from app/Views/.
+     * Render a view file from app/Views/ inside the shared layout.
      *
      * @param array<string, mixed> $data  variables to expose to the view
      */
     protected function view(string $name, array $data = []): void
     {
         extract($data);                       // turns ['title' => 'x'] into $title
-        require __DIR__ . "/Views/$name.php"; // load + run the template
+
+        // Capture the view's output, then hand it to the layout as $content.
+        ob_start();
+        require __DIR__ . "/Views/$name.php";
+        $content = ob_get_clean();
+
+        $title = $data['title'] ?? 'Mini CMS';
+        require __DIR__ . '/Views/layout.php';
     }
 
     /**
