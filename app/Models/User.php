@@ -42,12 +42,25 @@ class User
     }
 
     /**
+     * The full field definitions (for views that render inputs from config).
+     *
+     * @return array<string, array{label: string, type: string, max: int, unique?: bool}>
+     */
+    public static function fields(): array
+    {
+        return self::FIELDS;
+    }
+
+    /**
      * Validate raw (already-trimmed) user input against the domain rules.
      *
      * @param array<string, string> $input
+     * @param ?string $ignoreUsername  exclude this row from uniqueness checks
+     *                                  (used on update, so a user's own values
+     *                                  don't count as "already taken")
      * @return array<string, string>  field => error message
      */
-    public static function validate(array $input): array
+    public static function validate(array $input, ?string $ignoreUsername = null): array
     {
         $errors = [];
 
@@ -66,7 +79,7 @@ class User
             };
 
             // Uniqueness only matters once the value itself is well-formed.
-            if ($error === null && ($meta['unique'] ?? false) && self::exists($field, $value)) {
+            if ($error === null && ($meta['unique'] ?? false) && self::exists($field, $value, $ignoreUsername)) {
                 $error = 'That ' . lcfirst($meta['label']) . ' is already taken.';
             }
 
@@ -145,6 +158,20 @@ class User
     }
 
     /**
+     * Fetch a single user by username (the primary key), or null if not found.
+     */
+    public static function findByUsername(string $username): ?self
+    {
+        $stmt = Database::connect()->prepare(
+            'SELECT username, first_name, last_name, age FROM users WHERE username = ?'
+        );
+        $stmt->execute([$username]);
+        $row = $stmt->fetch();
+
+        return $row !== false ? self::fromRow($row) : null;
+    }
+
+    /**
      * Insert a new user. Values are bound, so this is injection-safe.
      */
     public static function create(string $username, string $firstName, string $lastName, int $age): void
@@ -156,19 +183,40 @@ class User
     }
 
     /**
-     * Whether a row already exists with the given value in the given column.
+     * Update an existing user's editable fields, keyed by username (the PK).
+     * Values are bound, so this is injection-safe.
+     */
+    public static function update(string $username, string $firstName, string $lastName, int $age): void
+    {
+        $stmt = Database::connect()->prepare(
+            'UPDATE users SET first_name = ?, last_name = ?, age = ? WHERE username = ?'
+        );
+        $stmt->execute([$firstName, $lastName, $age, $username]);
+    }
+
+    /**
+     * Whether a row already exists with the given value in the given column,
+     * optionally excluding one row by its username (the primary key).
      *
      * The column name is whitelisted against self::FIELDS (never user input),
-     * so interpolating it into the SQL is safe; the value is still bound.
+     * so interpolating it into the SQL is safe; the values are still bound.
      */
-    private static function exists(string $column, string $value): bool
+    private static function exists(string $column, string $value, ?string $ignoreUsername = null): bool
     {
         if (!isset(self::FIELDS[$column])) {
             throw new \InvalidArgumentException("Unknown field: $column");
         }
 
-        $stmt = Database::connect()->prepare("SELECT 1 FROM users WHERE {$column} = ?");
-        $stmt->execute([$value]);
+        $sql = "SELECT 1 FROM users WHERE {$column} = ?";
+        $params = [$value];
+
+        if ($ignoreUsername !== null) {
+            $sql .= ' AND username <> ?';
+            $params[] = $ignoreUsername;
+        }
+
+        $stmt = Database::connect()->prepare($sql);
+        $stmt->execute($params);
 
         return $stmt->fetchColumn() !== false;
     }
