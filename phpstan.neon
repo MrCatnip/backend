@@ -1,0 +1,6 @@
+parameters:
+    # 0 (loosest) .. 10 (strictest). 6 is a sane middle ground.
+    level: 6
+    paths:
+        - app
+        - public

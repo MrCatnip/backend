@@ -1,0 +1,28 @@
+# Composer dependencies (regenerated via `composer install`)
+/vendor/
+
+# Composer's local platform binary (if you ever use it)
+composer.phar
+
+# Environment / secrets — never commit these
+.env
+.env.local
+*.env
+
+# PHP tooling caches
+.php-cs-fixer.cache
+.phpunit.result.cache
+.phpunit.cache/
+/.phpstan.cache/
+
+# Editor / IDE
+/.idea/
+*.sublime-*
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Logs & temp
+*.log
+/tmp/
