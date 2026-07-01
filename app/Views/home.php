@@ -17,4 +17,4 @@
     <button type="submit">Search users</button>
 </form>
 
-<p><a href="/users">See all users →</a></p>
+<a href="/register">Register</a>

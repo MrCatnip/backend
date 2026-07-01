@@ -19,4 +19,38 @@ class UsersController extends Controller
 
         $this->view('users', ['users' => $users]);
     }
+
+    /**
+     * GET /register — show the empty registration form.
+     */
+    public function register(): void
+    {
+        $this->view('register', ['errors' => [], 'old' => []]);
+    }
+
+    /**
+     * POST /register — validate input and create the user.
+     */
+    public function store(): void
+    {
+        // Collect the known fields from the request (HTTP concern).
+        $old = [];
+        foreach (User::fieldKeys() as $field) {
+            $old[$field] = trim($_POST[$field] ?? '');
+        }
+
+        // Ask the domain whether the input is valid.
+        $errors = User::validate($old);
+
+        if ($errors !== []) {
+            // Re-render the form with errors and the values already entered.
+            $this->view('register', ['errors' => $errors, 'old' => $old]);
+            return;
+        }
+
+        User::create($old['username'], $old['first_name'], $old['last_name'], (int) $old['age']);
+
+        // Post/Redirect/Get: avoid resubmission on refresh.
+        $this->redirect('/users');
+    }
 }
