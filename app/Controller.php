@@ -25,4 +25,14 @@ class Controller
         header('Content-Type: application/json');
         echo json_encode($data);
     }
+
+    /**
+     * Redirect to another path and stop execution.
+     * Uses 303 so the browser follows up with a GET (Post/Redirect/Get).
+     */
+    protected function redirect(string $path): never
+    {
+        header("Location: $path", true, 303);
+        exit;
+    }
 }
