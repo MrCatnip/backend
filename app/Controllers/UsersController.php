@@ -11,10 +11,11 @@ class UsersController extends Controller
     {
         // $_GET values are always strings (or absent); normalise to the
         // types User::select() expects and treat empty input as "no filter".
-        $name = isset($_GET['name']) && $_GET['name'] !== '' ? $_GET['name'] : null;
-        $age  = isset($_GET['age']) && $_GET['age'] !== '' ? (int) $_GET['age'] : null;
+        $name   = isset($_GET['name']) && $_GET['name'] !== '' ? $_GET['name'] : null;
+        $ageMin = isset($_GET['age_min']) && $_GET['age_min'] !== '' ? (int) $_GET['age_min'] : null;
+        $ageMax = isset($_GET['age_max']) && $_GET['age_max'] !== '' ? (int) $_GET['age_max'] : null;
 
-        $users = User::select($name, $age);
+        $users = User::select($name, $ageMin, $ageMax);
 
         $this->view('users', ['users' => $users]);
     }

@@ -15,11 +15,11 @@ class User
     }
 
     /**
-     * Fetch users, optionally filtered by name and/or age.
+     * Fetch users, optionally filtered by name and/or an age range.
      *
      * @return User[]
      */
-    public static function select(?string $name = null, ?int $age = null): array
+    public static function select(?string $name = null, ?int $ageMin = null, ?int $ageMax = null): array
     {
         $sql = 'SELECT username, first_name, last_name, age FROM users';
         $conditions = [];
@@ -32,9 +32,14 @@ class User
             $params[] = "%{$name}%";
         }
 
-        if ($age !== null) {
-            $conditions[] = 'age = ?';
-            $params[] = $age;
+        if ($ageMin !== null) {
+            $conditions[] = 'age >= ?';
+            $params[] = $ageMin;
+        }
+
+        if ($ageMax !== null) {
+            $conditions[] = 'age <= ?';
+            $params[] = $ageMax;
         }
 
         if ($conditions !== []) {
