@@ -4,7 +4,13 @@ require __DIR__ . '/../vendor/autoload.php';
 
 use App\Controllers\HomeController;
 use App\Controllers\UsersController;
+use App\ErrorHandler;
 use App\Router;
+
+$config = require dirname(__DIR__) . '/config/config.php';
+
+// Register global error/exception handling before anything else runs.
+(new ErrorHandler($config['debug']))->register();
 
 $router = new Router();
 

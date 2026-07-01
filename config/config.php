@@ -13,6 +13,8 @@ if (is_file($envFile)) {
 }
 
 return [
+    // Show detailed errors in development; a friendly page in production.
+    'debug' => filter_var($_ENV['APP_DEBUG'] ?? false, FILTER_VALIDATE_BOOL),
     'db' => [
         'host'     => $_ENV['DB_HOST']     ?? '127.0.0.1',
         'port'     => $_ENV['DB_PORT']     ?? '3306',
