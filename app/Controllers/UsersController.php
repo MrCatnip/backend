@@ -159,16 +159,17 @@ class UsersController extends Controller
 
     /**
      * Flatten a User into the string-keyed shape the form expects.
+     * Fields are derived from the model, so new fields flow through automatically.
      *
      * @return array<string, string>
      */
     private function toInput(User $user): array
     {
-        return [
-            'username'   => $user->username,
-            'first_name' => $user->first_name,
-            'last_name'  => $user->last_name,
-            'age'        => (string) $user->age,
-        ];
+        $input = [];
+        foreach (User::fieldKeys() as $field) {
+            $input[$field] = (string) $user->$field;
+        }
+
+        return $input;
     }
 }
