@@ -7,11 +7,12 @@ use App\Models\User;
 
 class UsersController extends Controller
 {
-    /** Presentation config for the register form (heading/action/button). */
+    /** Presentation config for the register form. */
     private const REGISTER_FORM = [
         'heading'     => 'Register a user',
         'action'      => '/register',
         'submitLabel' => 'Register',
+        'method'      => 'POST',     // fetch() verb the form submits with
     ];
 
     /** Presentation config for the edit form. */
@@ -19,6 +20,7 @@ class UsersController extends Controller
         'heading'     => 'Edit user',
         'action'      => '/update',
         'submitLabel' => 'Save changes',
+        'method'      => 'PUT',      // fetch() verb the form submits with
     ];
 
     public function get(): void
@@ -43,32 +45,25 @@ class UsersController extends Controller
             ...self::REGISTER_FORM,
             'fields' => User::fields(),
             'old'    => [],
-            'errors' => [],
         ]);
     }
 
     /**
-     * POST /register — validate input and create the user.
+     * POST /register — validate input and create the user. Returns JSON.
      */
     public function store(): void
     {
-        $old    = $this->collectInput();
-        $errors = User::validate($old);
+        $input  = $this->collectInput($this->jsonInput());
+        $errors = User::validate($input);
 
         if ($errors !== []) {
-            $this->view('user_form', [
-                ...self::REGISTER_FORM,
-                'fields' => User::fields(),
-                'old'    => $old,
-                'errors' => $errors,
-            ]);
+            $this->json(['success' => false, 'errors' => $errors], 422);
             return;
         }
 
-        User::create($old['username'], $old['first_name'], $old['last_name'], (int) $old['age']);
+        User::create($input['username'], $input['first_name'], $input['last_name'], (int) $input['age']);
 
-        // Post/Redirect/Get: avoid resubmission on refresh.
-        $this->redirect('/users');
+        $this->json(['success' => true]);
     }
 
     /**
@@ -79,7 +74,8 @@ class UsersController extends Controller
         $user = User::findByUsername($_GET['username'] ?? '');
 
         if ($user === null) {
-            $this->notFound();
+            http_response_code(404);
+            echo 'User not found.';
             return;
         }
 
@@ -87,69 +83,64 @@ class UsersController extends Controller
             ...self::EDIT_FORM,
             'fields' => $this->editFields(),
             'old'    => $this->toInput($user),
-            'errors' => [],
         ]);
     }
 
     /**
-     * POST /update — validate and persist changes to an existing user.
+     * PUT /update — validate and persist changes to an existing user. Returns JSON.
      */
     public function update(): void
     {
-        $old      = $this->collectInput();
-        $username = $old['username'];
+        $input    = $this->collectInput($this->jsonInput());
+        $username = $input['username'];
 
         if (User::findByUsername($username) === null) {
-            $this->notFound();
+            $this->json(['success' => false, 'errors' => ['username' => 'User not found.']], 404);
             return;
         }
 
         // Exclude this row from the uniqueness check (its own username is fine).
-        $errors = User::validate($old, ignoreUsername: $username);
+        $errors = User::validate($input, ignoreUsername: $username);
 
         if ($errors !== []) {
-            $this->view('user_form', [
-                ...self::EDIT_FORM,
-                'fields' => $this->editFields(),
-                'old'    => $old,
-                'errors' => $errors,
-            ]);
+            $this->json(['success' => false, 'errors' => $errors], 422);
             return;
         }
 
-        User::update($username, $old['first_name'], $old['last_name'], (int) $old['age']);
+        User::update($username, $input['first_name'], $input['last_name'], (int) $input['age']);
 
-        $this->redirect('/users');
+        $this->json(['success' => true]);
     }
 
     /**
-     * POST /delete — remove a user, then return to the list.
+     * DELETE /delete?username=X — remove a user. Returns JSON.
      */
     public function delete(): void
     {
-        $username = trim($_POST['username'] ?? '');
+        $username = trim($_GET['username'] ?? '');
 
         if ($username !== '') {
             // Idempotent: deleting a non-existent user is a harmless no-op.
             User::delete($username);
         }
 
-        $this->redirect('/users');
+        $this->json(['success' => true]);
     }
 
     /**
-     * Collect the known user fields from the POST request (HTTP concern).
+     * Pick the known user fields out of a raw input array and trim them.
      *
+     * @param array<string, mixed> $source
      * @return array<string, string>
      */
-    private function collectInput(): array
+    private function collectInput(array $source): array
     {
-        $old = [];
+        $input = [];
         foreach (User::fieldKeys() as $field) {
-            $old[$field] = trim($_POST[$field] ?? '');
+            $input[$field] = trim((string) ($source[$field] ?? ''));
         }
 
-        return $old;
+        return $input;
     }
 
     /**
@@ -178,11 +169,5 @@ class UsersController extends Controller
             'last_name'  => $user->last_name,
             'age'        => (string) $user->age,
         ];
-    }
-
-    private function notFound(): void
-    {
-        http_response_code(404);
-        echo 'User not found.';
     }
 }

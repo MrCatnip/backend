@@ -23,14 +23,27 @@
                     <td><?= htmlspecialchars((string) $user->age) ?></td>
                     <td>
                         <a href="/update?username=<?= urlencode($user->username) ?>">Edit</a>
-                        <form method="post" action="/delete" style="display:inline"
-                              onsubmit="return confirm('Delete <?= htmlspecialchars($user->username, ENT_QUOTES) ?>?')">
-                            <input type="hidden" name="username" value="<?= htmlspecialchars($user->username, ENT_QUOTES) ?>">
-                            <button type="submit">Delete</button>
-                        </form>
+                        <button type="button" class="delete-user"
+                                data-username="<?= htmlspecialchars($user->username, ENT_QUOTES) ?>">Delete</button>
                     </td>
                 </tr>
             <?php endforeach ?>
         </tbody>
     </table>
+
+    <script>
+        document.querySelectorAll('.delete-user').forEach((button) => {
+            button.addEventListener('click', async () => {
+                const username = button.dataset.username;
+                if (!confirm(`Delete ${username}?`)) return;
+
+                const response = await fetch('/delete?username=' + encodeURIComponent(username), {
+                    method: 'DELETE', // real DELETE verb
+                });
+                const data = await response.json();
+
+                if (data.success) window.location.reload();
+            });
+        });
+    </script>
 <?php endif ?>
