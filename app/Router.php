@@ -21,6 +21,14 @@ class Router
         $this->routes['GET'][$path] = $handler;
     }
 
+    /**
+     * @param array{0: class-string, 1: string} $handler  [ControllerClass, methodName]
+     */
+    public function post(string $path, array $handler): void
+    {
+        $this->routes['POST'][$path] = $handler;
+    }
+
     public function dispatch(string $method, string $path): void
     {
         $handler = $this->routes[$method][$path] ?? null;
