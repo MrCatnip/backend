@@ -3,7 +3,6 @@
 namespace App;
 
 use PDO;
-use PDOException;
 
 class Database
 {
@@ -21,16 +20,13 @@ class Database
 
         $dsn = "mysql:host={$db['host']};port={$db['port']};dbname={$db['name']};charset=utf8mb4";
 
-        try {
-            self::$connection = new PDO($dsn, $db['user'], $db['password'], [
-                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION, // errors throw exceptions
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,       // rows as ['col' => value]
-                PDO::ATTR_EMULATE_PREPARES   => false,                 // use real prepared statements
-            ]);
-        } catch (PDOException $e) {
-            http_response_code(500);
-            exit('Database connection failed: ' . $e->getMessage());
-        }
+        // A failed connection throws PDOException, which bubbles up to the
+        // global ErrorHandler (logged, and shown per the APP_DEBUG setting).
+        self::$connection = new PDO($dsn, $db['user'], $db['password'], [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION, // errors throw exceptions
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,       // rows as ['col' => value]
+            PDO::ATTR_EMULATE_PREPARES   => false,                 // use real prepared statements
+        ]);
 
         return self::$connection;
     }
