@@ -29,18 +29,7 @@ class Controller
      */
     protected function json(array $data, int $status = 200): void
     {
-        http_response_code($status);
-        header('Content-Type: application/json');
-        echo json_encode($data);
-    }
-
-    /**
-     * Whether the client prefers a JSON response, based on its Accept header.
-     * Lets one route serve both the HTML view and an API payload.
-     */
-    protected function wantsJson(): bool
-    {
-        return str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json');
+        Response::json($data, $status);
     }
 
     /**

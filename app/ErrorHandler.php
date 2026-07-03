@@ -56,7 +56,7 @@ class ErrorHandler
             http_response_code($status);
         }
 
-        $this->wantsJson()
+        Request::wantsJson()
             ? $this->renderJson($status, $e)
             : $this->renderHtml($status, $e);
     }
@@ -75,22 +75,12 @@ class ErrorHandler
         }
     }
 
-    private function wantsJson(): bool
-    {
-        return str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json')
-            || str_contains($_SERVER['CONTENT_TYPE'] ?? '', 'application/json');
-    }
-
     private function renderJson(int $status, Throwable $e): void
     {
-        if (headers_sent() === false) {
-            header('Content-Type: application/json');
-        }
-
-        echo json_encode([
+        Response::json([
             'success' => false,
             'message' => $this->messageFor($status, $e),
-        ]);
+        ], $status);
     }
 
     private function renderHtml(int $status, Throwable $e): void

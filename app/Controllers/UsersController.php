@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Controller;
 use App\Exceptions\NotFoundException;
 use App\Models\User;
+use App\Request;
 
 class UsersController extends Controller
 {
@@ -36,7 +37,7 @@ class UsersController extends Controller
 
         // Same query, two representations: JSON for API clients (Accept:
         // application/json), the HTML view for everyone else.
-        if ($this->wantsJson()) {
+        if (Request::wantsJson()) {
             $this->json(['users' => $users]);
             return;
         }
