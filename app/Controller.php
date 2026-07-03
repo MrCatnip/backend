@@ -35,6 +35,15 @@ class Controller
     }
 
     /**
+     * Whether the client prefers a JSON response, based on its Accept header.
+     * Lets one route serve both the HTML view and an API payload.
+     */
+    protected function wantsJson(): bool
+    {
+        return str_contains($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json');
+    }
+
+    /**
      * Decode a JSON request body. PHP only populates $_POST for POST form
      * submissions, so PUT/PATCH/DELETE payloads must be read from the raw body.
      *

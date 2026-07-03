@@ -34,6 +34,13 @@ class UsersController extends Controller
 
         $users = User::select($name, $ageMin, $ageMax);
 
+        // Same query, two representations: JSON for API clients (Accept:
+        // application/json), the HTML view for everyone else.
+        if ($this->wantsJson()) {
+            $this->json(['users' => $users]);
+            return;
+        }
+
         $this->view('users', ['title' => 'Users', 'users' => $users]);
     }
 
