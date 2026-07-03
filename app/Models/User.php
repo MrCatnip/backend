@@ -10,14 +10,22 @@ class User
      * The fields that make up a user, with their constraints.
      * Single source of truth for both input collection and validation.
      *
-     * - type:   'text' (max = character length) or 'int' (max = maximum value)
-     * - max:    upper bound, interpreted per type
-     * - unique: whether the value must not already exist in the table
+     * - type:    'text' (max = character length) or 'int' (max = maximum value)
+     * - max:     upper bound, interpreted per type
+     * - unique:  whether the value must not already exist in the table
+     * - pattern: (text only) regex the value must fully match
+     * - patternError: message shown when the pattern doesn't match
      *
-     * @var array<string, array{label: string, type: string, max: int, unique?: bool}>
+     * @var array<string, array{label: string, type: string, max: int, unique?: bool, pattern?: string, patternError?: string}>
      */
     private const FIELDS = [
-        'username'   => ['label' => 'Username',   'type' => 'text', 'max' => 20,  'unique' => true],
+        'username'   => [
+            'label' => 'Username', 'type' => 'text', 'max' => 20, 'unique' => true,
+            // A username is an identifier (primary key, appears in URLs), so
+            // keep it to a safe, unambiguous charset — unlike the name fields.
+            'pattern' => '/^[A-Za-z0-9_]+$/',
+            'patternError' => 'Username may only contain letters, numbers and underscores.',
+        ],
         'first_name' => ['label' => 'First name', 'type' => 'text', 'max' => 255],
         'last_name'  => ['label' => 'Last name',  'type' => 'text', 'max' => 255],
         'age'        => ['label' => 'Age',        'type' => 'int',  'max' => 150],
@@ -92,13 +100,19 @@ class User
     }
 
     /**
-     * @param array{label: string, max: int} $meta
+     * @param array{label: string, max: int, pattern?: string, patternError?: string} $meta
      */
     private static function validateText(string $value, array $meta): ?string
     {
-        return mb_strlen($value) > $meta['max']
-            ? "{$meta['label']} must be at most {$meta['max']} characters."
-            : null;
+        if (mb_strlen($value) > $meta['max']) {
+            return "{$meta['label']} must be at most {$meta['max']} characters.";
+        }
+
+        if (isset($meta['pattern']) && preg_match($meta['pattern'], $value) !== 1) {
+            return $meta['patternError'];
+        }
+
+        return null;
     }
 
     /**
